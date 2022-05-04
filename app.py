@@ -9,6 +9,8 @@ import streamlit as st
 import random as rd
 import pandas as pd
 
+df = pd.read_csv('tracking.csv')
+
 
 def load_colors():
     with open('colors.css') as fh:
@@ -83,23 +85,45 @@ if st.button("New Game"):
     st.session_state['solution'] = rd.choice(list(get_words()))
     st.session_state.count = 0
     st.experimental_rerun()
+if st.button('Records'):
+    st.dataframe(df)
 
 if st.session_state.count<=6:
     remaining_attempts=6-st.session_state.count
     
+    user = st.text_input("Insert your name")
+    if 'user_info' not st.session_state:
+        user_info = {'username': user,
+                     'win': 0,
+                     'loss': 0}
+        st.session_state['user_info'] = user_info
+        
+    st.swrite('Welcome {}!'.format(user))
     guess = st.text_input("Try your word", max_chars=5).upper()
     
     # Only allow 5 letter words
     if guess not in get_words() and st.session_state.count > 0:
          st.write("Not a valid word! Try again.")
+         st.session_state['user']['win'] = st.session_state['user']['loss']+1
 
     elif validate_guess(guess, st.session_state['solution']):
         st.write("<h3><bold>That is correct!</bold></h3>", unsafe_allow_html=True)
         st.balloons()
+        st.session_state['user']['win'] = st.session_state['user']['win']+1
     elif remaining_attempts>0:
         st.write("You ony have "+str(remaining_attempts)+" attempts left.")
         st.session_state.count +=1
     else:
         st.write("<h3><bold>You ran out of tries!</bold></h3>", unsafe_allow_html=True)
+    
+    if st.session_state['user']['username'] in df.user.tolist():
+        df.loc[df.user == st.session_state['user']['username'], 'win'] += st.session_state['user']['win']
+        df.loc[df.user == st.session_state['user']['username'], 'loss'] += st.session_state['user']['loss']
+    else:
+        df = df.append({'user':st.session_state['user']['username'],
+                        'win':st.session_state['user']['win'],
+                        'loss':st.session_state['user']['loss']}, ignore_index=True)
+        
+    df.to_csv('tracking.csv', index=False)
 
 st.text(st.session_state['solution'])
