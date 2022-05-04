@@ -89,6 +89,13 @@ if st.button('Records'):
     st.dataframe(df)
 
 if st.session_state.count<=6:
+    if st.session_state['user_info']['username'] in df.user.tolist():
+        df.loc[df.user == st.session_state['user_info']['username'], 'win'] += st.session_state['user_info']['win']
+        df.loc[df.user == st.session_state['user_info']['username'], 'loss'] += st.session_state['user_info']['loss']
+    if st.session_state['user_info']['username'] not in df.user.tolist() and st.session_state['user_info']['username']>'':
+        df = df.append({'user':st.session_state['user_info']['username'],
+                        'win':st.session_state['user_info']['win'],
+                        'loss':st.session_state['user_info']['loss']}, ignore_index=True)
     remaining_attempts=6-st.session_state.count
     
     user = st.text_input("Insert your name")
@@ -116,14 +123,6 @@ if st.session_state.count<=6:
         st.session_state.count +=1
     else:
         st.write("<h3><bold>You ran out of tries!</bold></h3>", unsafe_allow_html=True)
-    
-    if st.session_state['user_info']['username'] in df.user.tolist():
-        df.loc[df.user == st.session_state['user_info']['username'], 'win'] += st.session_state['user_info']['win']
-        df.loc[df.user == st.session_state['user_info']['username'], 'loss'] += st.session_state['user_info']['loss']
-    if st.session_state['user_info']['username'] not in df.user.tolist() and st.session_state['user_info']['username']>'':
-        df = df.append({'user':st.session_state['user_info']['username'],
-                        'win':st.session_state['user_info']['win'],
-                        'loss':st.session_state['user_info']['loss']}, ignore_index=True)
         
     df.to_csv('tracking.csv', index=False)
 
