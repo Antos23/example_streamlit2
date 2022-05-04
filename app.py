@@ -92,7 +92,7 @@ if st.session_state.count<=6:
     remaining_attempts=6-st.session_state.count
     
     user = st.text_input("Insert your name")
-    if 'user_info' not st.session_state:
+    if 'user_info' not in st.session_state:
         user_info = {'username': user,
                      'win': 0,
                      'loss': 0}
