@@ -89,13 +89,7 @@ if st.button('Records'):
     st.dataframe(df)
 
 if st.session_state.count<=6:
-    if st.session_state['user_info']['username'] in df.user.tolist():
-        df.loc[df.user == st.session_state['user_info']['username'], 'win'] += st.session_state['user_info']['win']
-        df.loc[df.user == st.session_state['user_info']['username'], 'loss'] += st.session_state['user_info']['loss']
-    if st.session_state['user_info']['username'] not in df.user.tolist() and st.session_state['user_info']['username']>'':
-        df = df.append({'user':st.session_state['user_info']['username'],
-                        'win':st.session_state['user_info']['win'],
-                        'loss':st.session_state['user_info']['loss']}, ignore_index=True)
+    
     remaining_attempts=6-st.session_state.count
     
     user = st.text_input("Insert your name")
@@ -107,6 +101,14 @@ if st.session_state.count<=6:
         df = df.append({'user':user}, ignore_index=True)
         
     st.write('Welcome {}!'.format(user))
+    if st.session_state['user_info']['username'] in df.user.tolist():
+        df.loc[df.user == st.session_state['user_info']['username'], 'win'] += st.session_state['user_info']['win']
+        df.loc[df.user == st.session_state['user_info']['username'], 'loss'] += st.session_state['user_info']['loss']
+    if st.session_state['user_info']['username'] not in df.user.tolist() and st.session_state['user_info']['username']>'':
+        df = df.append({'user':st.session_state['user_info']['username'],
+                        'win':st.session_state['user_info']['win'],
+                        'loss':st.session_state['user_info']['loss']}, ignore_index=True)
+        
     guess = st.text_input("Try your word", max_chars=5).upper()
     
     # Only allow 5 letter words
