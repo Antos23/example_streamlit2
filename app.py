@@ -98,7 +98,7 @@ if st.session_state.count<=6:
                      'loss': 0}
         st.session_state['user_info'] = user_info
         
-    st.swrite('Welcome {}!'.format(user))
+    st.write('Welcome {}!'.format(user))
     guess = st.text_input("Try your word", max_chars=5).upper()
     
     # Only allow 5 letter words
