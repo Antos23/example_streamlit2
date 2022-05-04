@@ -9,8 +9,6 @@ import streamlit as st
 import random as rd
 import pandas as pd
 
-df = pd.read_csv('tracking.csv')
-
 
 def load_colors():
     with open('colors.css') as fh:
@@ -91,14 +89,18 @@ if st.button('Records'):
 if st.session_state.count<=6:
     
     remaining_attempts=6-st.session_state.count
+    df = pd.read_csv('tracking.csv')
     
-    user = st.text_input("Insert your name")
-    if 'user_info' not in st.session_state:
-        user_info = {'username': user,
-                     'win': 0,
-                     'loss': 0}
-        st.session_state['user_info'] = user_info
-        df = df.append({'user':user}, ignore_index=True)
+    form = st.form(key='first', clear_on_submit=True)
+    user = form.text_input(label='Enter your name').upper()
+    submit = form.form_submit_button(label='Submit')
+    if submit:
+        if 'user_info' not in st.session_state:
+            user_info = {'username': user,
+                         'win': 0,
+                         'loss': 0}
+            st.session_state['user_info'] = user_info
+            df = df.append({'user':user}, ignore_index=True)
         
     st.write('Welcome {}!'.format(user))
     if st.session_state['user_info']['username'] in df.user.tolist():
@@ -108,6 +110,7 @@ if st.session_state.count<=6:
         df = df.append({'user':st.session_state['user_info']['username'],
                         'win':st.session_state['user_info']['win'],
                         'loss':st.session_state['user_info']['loss']}, ignore_index=True)
+    df.to_csv('tracking.csv', index=False)
         
     guess = st.text_input("Try your word", max_chars=5).upper()
     
@@ -126,6 +129,4 @@ if st.session_state.count<=6:
     else:
         st.write("<h3><bold>You ran out of tries!</bold></h3>", unsafe_allow_html=True)
         
-    df.to_csv('tracking.csv', index=False)
-
 st.text(st.session_state['solution'])
