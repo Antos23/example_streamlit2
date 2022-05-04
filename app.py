@@ -95,6 +95,7 @@ if st.session_state.count<=6:
 
     elif validate_guess(guess, st.session_state['solution']):
         st.write("<h3><bold>That is correct!</bold></h3>", unsafe_allow_html=True)
+        st.balloons()
     elif remaining_attempts>0:
         st.write("You ony have "+str(remaining_attempts)+" attempts left.")
         st.session_state.count +=1
