@@ -83,13 +83,13 @@ if st.button("New Game"):
     st.session_state['solution'] = rd.choice(list(get_words()))
     st.session_state.count = 0
     st.experimental_rerun()
-if st.button('Records'):
-    st.dataframe(df)
 
 if st.session_state.count<=6:
     
     remaining_attempts=6-st.session_state.count
     df = pd.read_csv('tracking.csv')
+    if st.button('Records'):
+        st.dataframe(df)
     
     form = st.form(key='first', clear_on_submit=True)
     user = form.text_input(label='Enter your name').upper()
