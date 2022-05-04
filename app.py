@@ -1,124 +1,104 @@
-from random import choice
-import random
-from termcolor import colored
-import pandas as pd
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Apr 29 12:11:33 2022
+
+@author: henri
+"""
+
 import streamlit as st
-import sys
-from streamlit import caching
-import time
+import random as rd
+import pandas as pd
 
-st.title('Wordle')
 
-new_game = st.button('START A NEW GAME')
-if new_game:
-    st.success('REFRESH THE PAGE TO START THE NEW GAME')
-    st.legacy_caching.caching.clear_cache()
-    st.stop()
+def load_colors():
+    with open('colors.css') as fh:
+        st.write(f"<style>{fh.read()}</style>", unsafe_allow_html=True)
 
-@st.cache()
-def find_target():
+@st.cache
+def get_words():
     words = pd.read_csv('unigram_freq.csv')
-    common_words = list(words.loc[(words['count'] >= 1000000)].astype(str).word.values)
-    english_5chars_words = [i.upper() for i in common_words if len(i) == 5]
-    return english_5chars_words, choice(english_5chars_words)
+    common_words = list(words.loc[(words['count']>=1000000)].astype(str).word.values)
 
-TILES = {
-    'correct_place': '🟩',
-    'correct_letter': '🟨',
-    'incorrect': '⬛'
-}
+    # return a Set so that searching for a specific word is faster
+    # more here: https://python-reference.readthedocs.io/en/latest/docs/sets/
+    english_5chars_words = {i.upper() for i in common_words if len(i) == 5}
+
+    
+    return english_5chars_words
 
 
 def validate_guess(guess, answer):
-    guessed = []
-    tile_pattern = []
-    # Loop through every letter of the guess
-    for i, letter in enumerate(guess):
-        # If the letter is in the correct spot, color it in green and add the green tile
+
+    color_map = {
+        'Correct': " <span class='green'>",
+        'Good': " <span class='yellow'>",
+        'Wrong': " <span class='grey'>"
+    }
+
+    word = "<div><h4><bold>"
+
+    for i, char in enumerate(guess):
         if answer[i] == guess[i]:
-            # guessed += colored(letter, 'green')
-            guessed += letter
-            tile_pattern.append(TILES['correct_place'])
-            # Replace the existing letter in the answer with -
-            answer = answer.replace(letter, '-', 1)
-        # whereas if the letter is in the correct spot, color it in yellow and add the yellow tile
-        elif letter in answer:
-            # guessed += colored(letter, 'yellow')
-            guessed += letter
-            tile_pattern.append(TILES['correct_letter'])
-            # Replace the existing letter in the answer with -
-            answer = answer.replace(letter, '-', 1)
-        # Otherwise, the letter doens't exist, just add the grey tile
+            word += color_map['Correct'] + char
+
+        elif char in answer:
+            word += color_map['Good'] + char
+
         else:
-            guessed += letter
-            tile_pattern.append(TILES['incorrect'])
-    
-    # Return the joined colored letters and tiles pattern
-    return ''.join(guessed), ''.join(tile_pattern)
+            word += color_map['Wrong'] + char
 
 
-ALLOWED_GUESSES = 6
+    word += "</span></bold></h4></div>"
+
+    st.write(word, unsafe_allow_html=True)
+
+    return guess == answer
 
 
-def wordle_game(target, words):
 
-    GAME_ENDED = False
+if 'solution' not in st.session_state:
+    st.session_state['solution'] = rd.choice(list(get_words()))
 
-    # Init Session State to store the results as streamlit keep executing the script from top to bottom
-    if 'history_guesses' not in st.session_state:
-        st.session_state.history_guesses = []
-    if 'tiles_patterns' not in st.session_state:
-        st.session_state.tiles_patterns = []
-    if 'colored_guessed' not in st.session_state:
-        st.session_state.colored_guessed = []
 
-    # Keep playing until the user runs out of tries or finds the word
-    i = 1
-    guess = st.text_input('Type your guess!', placeholder='type here', max_chars=5).upper()
-    while not GAME_ENDED:
-        # Check the user's guess
-        if len(guess) != 5:
-            st.warning("Please enter a 5-letter word")
-            st.stop()
-        elif guess in st.session_state.history_guesses:
-            st.warning("You've already guessed this word!!")
-            st.stop()
-        elif guess not in words:
-            st.warning('This word does not exist!')
-            st.stop()
+st.title("Wordle")
+load_colors()
+
         
-        # Append the valid guess
-        st.session_state.history_guesses.append(guess)
-        # Validate the guess
-        guessed, pattern = validate_guess(guess, target)
-        # Append the results
-        st.session_state.colored_guessed.append(guessed)
-        st.session_state.tiles_patterns.append(pattern)
+if 'count' not in st.session_state:
+    st.session_state.count = 0
 
-        lcol, rcol = st.columns(2)
-        # For each result (also the previous ones), it'll print the colored guesses and the tile pattern
-        for g, p in zip(st.session_state.colored_guessed, st.session_state.tiles_patterns):
-            lcol.write(f"Attempt: {g}")
-            rcol.write(f"Result: {p}")
-            # st.write(g, end=' ')
-            # st.write(p)
-        st.write()
-        
-        # If the guess is the target or if the user ran out of tries, end the game
-        if guess == target or len(st.session_state.history_guesses) == ALLOWED_GUESSES:
-            GAME_ENDED = True
-        i += 1
+if st.button("Give me a hint."):
+    hint=list(st.session_state['solution'])
 
+    # hint[rd.randint(0,len(st.session_state['solution'])-1)]
+    # ^ why make it harder when it can be so simple?   
+    st.text("Why don't you try a word with a '" + rd.choice(hint) + "' on it?")
+    st.session_state.count -=1
     
-    # st.write the results
-    if len(st.session_state.history_guesses) == ALLOWED_GUESSES and guess != target:
-        st.snow()
-        st.write("\nDANG IT! YOU RAN OUT OF TRIES. THE CORRECT WORD WAS --> {}".format(target))
+if st.button("Check solution."):
+    st.text("The solution is: " + st.session_state['solution'])
+    st.session_state.count -=1
+
+if st.button("New Game"):
+    st.session_state['solution'] = rd.choice(list(get_words()))
+    st.session_state.count = 0
+    st.experimental_rerun()
+
+if st.session_state.count<=6:
+    remaining_attempts=6-st.session_state.count
+    
+    guess = st.text_input("Try your word", max_chars=5).upper()
+    
+    # Only allow 5 letter words
+    if guess not in get_words() and st.session_state.count > 0:
+         st.write("Not a valid word! Try again.")
+
+    elif validate_guess(guess, st.session_state['solution']):
+        st.write("<h3><bold>That is correct!</bold></h3>", unsafe_allow_html=True)
+    elif remaining_attempts>0:
+        st.write("You ony have "+str(remaining_attempts)+" attempts left.")
+        st.session_state.count +=1
     else:
-        st.balloons()
-        st.write("\nGOOD JOB, YOU NAILED IT IN {}/{} TRIES\n".format(len(st.session_state.history_guesses),
-                                                                  ALLOWED_GUESSES))
+        st.write("<h3><bold>You ran out of tries!</bold></h3>", unsafe_allow_html=True)
 
-words, target_word = find_target()
-st.write('WELCOME TO WORDLE...TIME TO GUESS, YOU HAVE {} TRIES\n!'.format(ALLOWED_GUESSES))
-wordle_game(target_word, words)
+st.text(st.session_state['solution'])
