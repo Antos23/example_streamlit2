@@ -104,12 +104,12 @@ if st.session_state.count<=6:
     # Only allow 5 letter words
     if guess not in get_words() and st.session_state.count > 0:
          st.write("Not a valid word! Try again.")
-         st.session_state['user']['win'] = st.session_state['user']['loss']+1
+         st.session_state['user_info']['win'] = st.session_state['user_info']['loss']+1
 
     elif validate_guess(guess, st.session_state['solution']):
         st.write("<h3><bold>That is correct!</bold></h3>", unsafe_allow_html=True)
         st.balloons()
-        st.session_state['user']['win'] = st.session_state['user']['win']+1
+        st.session_state['user_info']['win'] = st.session_state['user_info']['win']+1
     elif remaining_attempts>0:
         st.write("You ony have "+str(remaining_attempts)+" attempts left.")
         st.session_state.count +=1
