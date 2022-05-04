@@ -116,13 +116,13 @@ if st.session_state.count<=6:
     else:
         st.write("<h3><bold>You ran out of tries!</bold></h3>", unsafe_allow_html=True)
     
-    if st.session_state['user']['username'] in df.user.tolist():
-        df.loc[df.user == st.session_state['user']['username'], 'win'] += st.session_state['user']['win']
-        df.loc[df.user == st.session_state['user']['username'], 'loss'] += st.session_state['user']['loss']
+    if st.session_state['user_info']['username'] in df.user.tolist():
+        df.loc[df.user == st.session_state['user_info']['username'], 'win'] += st.session_state['user']['win']
+        df.loc[df.user == st.session_state['user_info']['username'], 'loss'] += st.session_state['user']['loss']
     else:
-        df = df.append({'user':st.session_state['user']['username'],
-                        'win':st.session_state['user']['win'],
-                        'loss':st.session_state['user']['loss']}, ignore_index=True)
+        df = df.append({'user':st.session_state['user_info']['username'],
+                        'win':st.session_state['user_info']['win'],
+                        'loss':st.session_state['user_info']['loss']}, ignore_index=True)
         
     df.to_csv('tracking.csv', index=False)
 
